@@ -1,10 +1,16 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 #include <utmp.h>
 
 #define SHOW_HOST 0
+
+void show_time(long time_val) {
+  char* cp = ctime(&time_val);
+  printf("%12.12s", cp + 4);
+}
 
 void show_info(struct utmp* utmp_ptr) {
   if (utmp_ptr->ut_type != USER_PROCESS) { /* users only */
@@ -15,7 +21,7 @@ void show_info(struct utmp* utmp_ptr) {
   printf(" ");
   printf("% -8.8s", utmp_ptr->ut_line);
   printf(" ");
-  printf("% 10d", utmp_ptr->ut_time);
+  show_time(utmp_ptr->ut_time);
   printf(" ");
 
 #ifdef SHOW_HOST
