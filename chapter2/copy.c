@@ -13,7 +13,7 @@
 #define BUFFER_SIZE 4096
 
 void usage() {
-  printf("usage: cp source dest\n");
+  printf("[INFO] usage: cp source dest\n");
   return;
 }
 
@@ -40,6 +40,12 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  if (optind + 2 != argc) {
+    printf("[ERROR] SOURCE and DEST arguments are required.\n");
+    usage();
+    return 0;
+  }
+
   char* src_path = argv[optind];
   char* des_path = argv[optind + 1];
 
@@ -49,7 +55,7 @@ int main(int argc, char* argv[]) {
     if (errno == EISDIR) {
       printf("[ERROR] Copying directory is not supported.\n", src_path);
     } else {
-      printf("[ERROR] Failed to source file: %s.\n", src_path);
+      printf("[ERROR] Failed to open source file: %s.\n", src_path);
     }
     exit(-1);
   }
@@ -68,9 +74,6 @@ int main(int argc, char* argv[]) {
     printf("[ERROR] Failed to stat %s.\n", des_path);
     exit(-1);
   }
-
-  // printf("[INFO] src_path: %s\n", src_path);
-  // printf("[INFO] des_path: %s\n", des_path);
 
   // If errno is ENOENT, means that file is not exist, create a new file.
   int des_fd = open(des_path, O_RDWR | O_CREAT | O_TRUNC | O_APPEND,
