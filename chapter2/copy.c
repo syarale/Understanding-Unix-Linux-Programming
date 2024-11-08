@@ -13,7 +13,7 @@
 #define BUFFER_SIZE 4096
 
 void usage() {
-  printf("[INFO] usage: cp source dest\n");
+  printf("[INFO] usage: cp SOURCE DEST\n");
   return;
 }
 
@@ -55,15 +55,26 @@ int main(int argc, char* argv[]) {
     if (errno == EISDIR) {
       printf("[ERROR] Copying directory is not supported.\n", src_path);
     } else {
-      printf("[ERROR] Failed to open source file: %s.\n", src_path);
+      printf("[ERROR] Failed to open SOURCE: %s\n", src_path);
     }
     exit(-1);
   }
   char* src_file_name = basename(src_path);
 
   // Check destnation file path
-  struct stat des_stat;
+  struct stat src_stat, des_stat;
+  if (stat(src_path, &src_stat) == -1) {
+    printf("[ERROR] Failed to stat SOURCE: %s", src_path);
+    exit(-1);
+  }
+
   if (stat(des_path, &des_stat) != -1) {
+    if (src_stat.st_ino == des_stat.st_ino &&
+        src_stat.st_dev == des_stat.st_dev) {
+      printf("[INFO] SOURCE and DEST are the same file.\n");
+      return 0;
+    }
+
     if (S_ISDIR(des_stat.st_mode)) {
       if (des_path[strlen(des_path) - 1] != '/') {
         strcat(des_path, "/");
@@ -71,7 +82,7 @@ int main(int argc, char* argv[]) {
       strcat(des_path, src_file_name);
     }
   } else if (errno != ENOENT) {
-    printf("[ERROR] Failed to stat %s.\n", des_path);
+    printf("[ERROR] Failed to stat  DEST: %s\n", des_path);
     exit(-1);
   }
 
@@ -79,7 +90,7 @@ int main(int argc, char* argv[]) {
   int des_fd = open(des_path, O_RDWR | O_CREAT | O_TRUNC | O_APPEND,
                     S_IRUSR | S_IWUSR | S_IXUSR);
   if (des_fd == -1) {
-    printf("[ERROR] Failed to open destnation file: %s\n", des_path);
+    printf("[ERROR] Failed to open DEST: %s\n", des_path);
     exit(-1);
   }
 
@@ -87,13 +98,13 @@ int main(int argc, char* argv[]) {
   ssize_t read_bytes = 0;
   while ((read_bytes = read(src_fd, &buffer, BUFFER_SIZE)) > 0) {
     if (write(des_fd, buffer, read_bytes) < read_bytes) {
-      printf("[ERROR] Failed to write data to %s.\n", des_path);
+      printf("[ERROR] Failed to write data to DEST: %s\n", des_path);
       exit(-1);
     }
   }
 
   if (read_bytes == -1) {
-    printf("[ERROR] Failed to read data from %s.\n", src_path);
+    printf("[ERROR] Failed to read data from SOURCE: %s\n", src_path);
     exit(-1);
   }
 
