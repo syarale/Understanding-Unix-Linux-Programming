@@ -12,6 +12,8 @@
 
 #define BUFFER_SIZE 4096
 
+static bool is_overwrite_prompt = false;
+
 void usage() {
   printf("[INFO] usage: cp SOURCE DEST\n");
   return;
@@ -27,7 +29,7 @@ int main(int argc, char* argv[]) {
   while ((opt = getopt_long(argc, argv, "ih", &long_opts, NULL)) != -1) {
     switch (opt) {
       case 'i':
-        printf("arg: i\n");
+        is_overwrite_prompt = true;
         break;
       case 'h':
         usage();
@@ -80,6 +82,15 @@ int main(int argc, char* argv[]) {
         strcat(des_path, "/");
       }
       strcat(des_path, src_file_name);
+    } else {
+      char overwrite_info[4];
+      if (is_overwrite_prompt) {
+        scanf("%4s", overwrite_info);
+        if (strcmp(overwrite_info, "yes") != 0 &&
+            strcmp(overwrite_info, "y") != 0) {
+          return 0;  // not overwrite destination file and exit
+        }
+      }
     }
   } else if (errno != ENOENT) {
     printf("[ERROR] Failed to stat  DEST: %s\n", des_path);
